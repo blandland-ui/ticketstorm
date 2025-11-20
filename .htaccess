@@ -7,6 +7,31 @@
 # Prevent directory listing
 Options -Indexes
 
+# Security Headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Hide PHP version
+<IfModule mod_headers.c>
+    Header unset X-Powered-By
+</IfModule>
+
+# CSS caching with charset
+<FilesMatch "\.(css)$">
+    Header set Content-Type "text/css; charset=utf-8"
+    Header set Cache-Control "public, max-age=604800, immutable"
+</FilesMatch>
+
+# HTML files
+<FilesMatch "\.(html)$">
+    Header set X-Content-Type-Options "nosniff"
+    Header set Cache-Control "no-cache, must-revalidate"
+</FilesMatch>
+
 # Protect configuration files
 <FilesMatch "^(database\.php|config\.php)$">
     Order allow,deny
@@ -33,6 +58,13 @@ ErrorDocument 403 /index.html
 <IfModule mod_php7.c>
     php_flag display_errors Off
     php_flag log_errors On
+    php_flag expose_php Off
+    php_value error_log /home/blacoksf/php_errors.log
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_flag expose_php Off
     php_value error_log /home/blacoksf/php_errors.log
 </IfModule>
 

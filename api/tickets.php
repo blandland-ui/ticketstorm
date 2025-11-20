@@ -1,6 +1,11 @@
 <?php
 require_once '../config/database.php';
 
+// Set security headers
+header('Content-Type: application/json; charset=utf-8');
+header('X-Content-Type-Options: nosniff');
+header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+
 if (!isLoggedIn()) {
     jsonResponse(false, 'Authentication required');
 }
