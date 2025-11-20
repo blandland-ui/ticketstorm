@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - TicketStorm</title>
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="auth-page">
     <div class="auth-container">
@@ -32,8 +32,8 @@
                 <button type="submit" class="btn btn-primary">Login</button>
                 
                 <div class="auth-links">
-                    <p>Don't have an account? <a href="/register.html">Register here</a></p>
-                    <p><a href="/">← Back to Home</a></p>
+                    <p>Don't have an account? <a href="register.html">Register here</a></p>
+                    <p><a href="index.html">← Back to Home</a></p>
                 </div>
             </form>
         </div>
@@ -48,7 +48,7 @@
             formData.append('action', 'login');
             
             try {
-                const response = await fetch('/api/auth.php', {
+                const response = await fetch('api/auth.php', {
                     method: 'POST',
                     body: formData
                 });
@@ -61,7 +61,7 @@
                     messageBox.classList.remove('hidden');
                     
                     setTimeout(() => {
-                        window.location.href = data.data.is_admin ? '/admin.html' : '/dashboard.html';
+                        window.location.href = data.data.is_admin ? 'admin.html' : 'dashboard.html';
                     }, 1000);
                 } else {
                     messageBox.className = 'message-box error';

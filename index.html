@@ -4,16 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TicketStorm - Tech Support Tickets</title>
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="landing-page">
+    <!-- Admin Panel Link (only shown if logged in as admin) -->
+    <div id="adminNotice" style="display: none; background: #e74c3c; color: white; text-align: center; padding: 0.75rem; font-weight: 600; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+        <a href="admin.html" style="color: white; text-decoration: underline;">🛡️ Access Admin Panel</a>
+    </div>
+    
     <header class="hero">
         <div class="container">
             <h1>⚡ TicketStorm</h1>
             <p class="tagline">Lightning-Fast Tech Support Ticket Management</p>
             <div class="cta-buttons">
-                <a href="/login.html" class="btn btn-primary">Login</a>
-                <a href="/register.html" class="btn btn-secondary">Register</a>
+                <a href="login.html" class="btn btn-primary">Login</a>
+                <a href="register.html" class="btn btn-secondary">Register</a>
             </div>
         </div>
     </header>
@@ -38,9 +43,9 @@
                     <p>Secure user authentication and personalized ticket management.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">⚙️</div>
-                    <h3>Admin Panel</h3>
-                    <p>Powerful admin dashboard to manage all tickets and users efficiently.</p>
+                    <div class="feature-icon">💬</div>
+                    <h3>Real-Time Updates</h3>
+                    <p>Get instant notifications and responses from support staff on your tickets.</p>
                 </div>
             </div>
         </div>
@@ -51,5 +56,26 @@
             <p>&copy; 2025 TicketStorm. All rights reserved.</p>
         </div>
     </footer>
+
+    <script>
+        // Check if user is logged in and show admin link if admin
+        async function checkAdminStatus() {
+            try {
+                const response = await fetch('api/auth.php?action=check');
+                const data = await response.json();
+                
+                if (data.success && (data.data.is_admin === true || data.data.is_admin === 1 || data.data.is_admin === '1')) {
+                    document.getElementById('adminNotice').style.display = 'block';
+                    // Add padding to body to account for fixed admin notice
+                    document.body.style.paddingTop = '50px';
+                }
+            } catch (error) {
+                // User not logged in, ignore
+            }
+        }
+
+        // Run on page load
+        checkAdminStatus();
+    </script>
 </body>
 </html>
