@@ -4,6 +4,19 @@ error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
+// Catch ALL errors and return JSON
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Server error occurred',
+        'error' => $errstr,
+        'file' => $errfile,
+        'line' => $errline
+    ]);
+    exit();
+});
+
 // Include config (session starts there)
 require_once '../config/database.php';
 
@@ -14,21 +27,25 @@ header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
-switch ($action) {
-    case 'register':
-        handleRegister();
-        break;
-    case 'login':
-        handleLogin();
-        break;
-    case 'logout':
-        handleLogout();
-        break;
-    case 'check':
-        handleCheck();
-        break;
-    default:
-        jsonResponse(false, 'Invalid action');
+try {
+    switch ($action) {
+        case 'register':
+            handleRegister();
+            break;
+        case 'login':
+            handleLogin();
+            break;
+        case 'logout':
+            handleLogout();
+            break;
+        case 'check':
+            handleCheck();
+            break;
+        default:
+            jsonResponse(false, 'Invalid action');
+    }
+} catch (Exception $e) {
+    jsonResponse(false, 'Server error: ' . $e->getMessage());
 }
 
 function handleRegister() {

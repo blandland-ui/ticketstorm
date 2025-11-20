@@ -27,7 +27,14 @@ class Database {
                 self::$conn->set_charset("utf8mb4");
             } catch (Exception $e) {
                 error_log("Database connection error: " . $e->getMessage());
-                die("Database connection error. Please try again later.");
+                // Return JSON error instead of dying
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Database connection error. Please contact administrator.',
+                    'error' => $e->getMessage()
+                ]);
+                exit();
             }
         }
         return self::$conn;
