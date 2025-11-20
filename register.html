@@ -81,6 +81,8 @@
                 
                 const data = await response.json();
                 
+                console.log('Response:', data); // Debug log
+                
                 if (data.success) {
                     messageBox.className = 'message-box success';
                     messageBox.textContent = data.message;
@@ -95,8 +97,9 @@
                     messageBox.classList.remove('hidden');
                 }
             } catch (error) {
+                console.error('Error:', error); // Debug log
                 messageBox.className = 'message-box error';
-                messageBox.textContent = 'An error occurred. Please try again.';
+                messageBox.textContent = 'An error occurred. Please try again. Check console for details.';
                 messageBox.classList.remove('hidden');
             }
         });

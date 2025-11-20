@@ -1,9 +1,9 @@
 <?php
 // Database Configuration
 define('DB_HOST', 'localhost');
-define('DB_USER', 'blandwidth_admin');
+define('DB_USER', 'cpses_blwvbujfkq');
 define('DB_PASS', 'The  hater#');
-define('DB_NAME', 'blacksitedb_database');
+define('DB_NAME', 'blacoksf_blacksitedb_database');
 
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {

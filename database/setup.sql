@@ -1,7 +1,7 @@
 -- TicketStorm Database Setup
--- Database: blacksitedb_database
+-- Database: blacoksf_blacksitedb_database
 
-USE blacksitedb_database;
+USE blacoksf_blacksitedb_database;
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
