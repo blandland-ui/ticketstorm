@@ -1,4 +1,9 @@
 <?php
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
 require_once '../config/database.php';
 
 header('Content-Type: application/json');
@@ -23,49 +28,59 @@ switch ($action) {
 }
 
 function handleRegister() {
-    $username = $_POST['username'] ?? '';
-    $email = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
-    $full_name = $_POST['full_name'] ?? '';
+    try {
+        $username = $_POST['username'] ?? '';
+        $email = $_POST['email'] ?? '';
+        $password = $_POST['password'] ?? '';
+        $full_name = $_POST['full_name'] ?? '';
+        
+        // Validation
+        if (empty($username) || empty($email) || empty($password) || empty($full_name)) {
+            jsonResponse(false, 'All fields are required');
+        }
+        
+        if (strlen($username) < 3 || strlen($username) > 50) {
+            jsonResponse(false, 'Username must be between 3 and 50 characters');
+        }
+        
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            jsonResponse(false, 'Invalid email format');
+        }
+        
+        if (strlen($password) < 6) {
+            jsonResponse(false, 'Password must be at least 6 characters');
+        }
+        
+        $conn = Database::getUsersConnection();
     
-    // Validation
-    if (empty($username) || empty($email) || empty($password) || empty($full_name)) {
-        jsonResponse(false, 'All fields are required');
-    }
-    
-    if (strlen($username) < 3 || strlen($username) > 50) {
-        jsonResponse(false, 'Username must be between 3 and 50 characters');
-    }
-    
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        jsonResponse(false, 'Invalid email format');
-    }
-    
-    if (strlen($password) < 6) {
-        jsonResponse(false, 'Password must be at least 6 characters');
-    }
-    
-    $conn = Database::getUsersConnection();
-    
-    // Check if username or email already exists
-    $stmt = $conn->prepare("SELECT user_id FROM users WHERE username = ? OR email = ?");
-    $stmt->bind_param("ss", $username, $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows > 0) {
-        jsonResponse(false, 'Username or email already exists');
-    }
-    
-    // Hash password and insert user
-    $password_hash = password_hash($password, PASSWORD_DEFAULT);
-    $stmt = $conn->prepare("INSERT INTO users (username, email, password_hash, full_name) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $username, $email, $password_hash, $full_name);
-    
-    if ($stmt->execute()) {
-        jsonResponse(true, 'Registration successful! You can now login.');
-    } else {
-        jsonResponse(false, 'Registration failed. Please try again.');
+        // Check if username or email already exists
+        $stmt = $conn->prepare("SELECT user_id FROM users WHERE username = ? OR email = ?");
+        if (!$stmt) {
+            jsonResponse(false, 'Database error: ' . $conn->error);
+        }
+        $stmt->bind_param("ss", $username, $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            jsonResponse(false, 'Username or email already exists');
+        }
+        
+        // Hash password and insert user
+        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare("INSERT INTO users (username, email, password_hash, full_name) VALUES (?, ?, ?, ?)");
+        if (!$stmt) {
+            jsonResponse(false, 'Database error: ' . $conn->error);
+        }
+        $stmt->bind_param("ssss", $username, $email, $password_hash, $full_name);
+        
+        if ($stmt->execute()) {
+            jsonResponse(true, 'Registration successful! You can now login.');
+        } else {
+            jsonResponse(false, 'Registration failed: ' . $stmt->error);
+        }
+    } catch (Exception $e) {
+        jsonResponse(false, 'Server error: ' . $e->getMessage());
     }
 }
 
