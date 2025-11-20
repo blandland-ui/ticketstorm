@@ -70,18 +70,21 @@
     <script>
         let currentFilter = '';
         
-        // Check authentication
+        // Check authentication - ADMIN ONLY
         async function checkAuth() {
             try {
                 const response = await fetch('api/auth.php?action=check');
                 const data = await response.json();
                 
                 if (!data.success) {
+                    alert('Please login to access admin panel');
                     window.location.href = 'login.html';
                     return false;
                 }
                 
-                if (!data.data.is_admin) {
+                // Enforce admin-only access
+                if (!data.data.is_admin && data.data.is_admin !== 1 && data.data.is_admin !== '1') {
+                    alert('Access denied. Admin privileges required.');
                     window.location.href = 'dashboard.html';
                     return false;
                 }
@@ -89,6 +92,7 @@
                 document.getElementById('userInfo').textContent = `Admin: ${data.data.full_name}`;
                 return true;
             } catch (error) {
+                alert('Authentication error');
                 window.location.href = 'login.html';
                 return false;
             }

@@ -87,7 +87,8 @@ cd /home/blacoksf/repositories/ticketstorm
                 
                 document.getElementById('userInfo').textContent = `Welcome, ${data.data.full_name}`;
                 
-                if (data.data.is_admin) {
+                // Redirect admins to admin panel
+                if (data.data.is_admin === true || data.data.is_admin === 1 || data.data.is_admin === '1') {
                     window.location.href = 'admin.html';
                     return false;
                 }
