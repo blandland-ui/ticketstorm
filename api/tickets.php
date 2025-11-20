@@ -66,7 +66,7 @@ function handleListTickets() {
     if ($is_admin) {
         $query = "SELECT t.*, u.username, u.full_name, u.email 
                   FROM tickets t 
-                  LEFT JOIN " . DB_USERS . ".users u ON t.user_id = u.user_id";
+                  LEFT JOIN users u ON t.user_id = u.user_id";
         
         if (!empty($status_filter)) {
             $query .= " WHERE t.status = ?";
@@ -117,7 +117,7 @@ function handleGetTicket() {
     // Get ticket details
     $query = "SELECT t.*, u.username, u.full_name, u.email 
               FROM tickets t 
-              LEFT JOIN " . DB_USERS . ".users u ON t.user_id = u.user_id 
+              LEFT JOIN users u ON t.user_id = u.user_id 
               WHERE t.ticket_id = ?";
     
     if (!$is_admin) {
@@ -143,7 +143,7 @@ function handleGetTicket() {
     // Get comments
     $stmt = $conn->prepare("SELECT c.*, u.username, u.full_name, u.is_admin 
                            FROM ticket_comments c 
-                           LEFT JOIN " . DB_USERS . ".users u ON c.user_id = u.user_id 
+                           LEFT JOIN users u ON c.user_id = u.user_id 
                            WHERE c.ticket_id = ? 
                            ORDER BY c.created_at ASC");
     $stmt->bind_param("i", $ticket_id);

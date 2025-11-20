@@ -1,62 +1,51 @@
 <?php
 // Database Configuration
 define('DB_HOST', 'localhost');
-define('DB_USER', 'blacoksf_admin');
+define('DB_USER', 'blandwidth_admin');
 define('DB_PASS', 'The  hater#');
-define('DB_USERS', 'blacoksf_ticket_storm_users');
-define('DB_TICKETS', 'blacoksf_ticket_storm_tickets');
+define('DB_NAME', 'blacksitedb_database');
 
-// Session Configuration
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_secure', 0); // Set to 1 if using HTTPS
-session_start();
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_only_cookies', 1);
+    ini_set('session.cookie_secure', 0); // Set to 1 if using HTTPS
+    session_start();
+}
 
 // Database connection class
 class Database {
-    private static $users_conn = null;
-    private static $tickets_conn = null;
+    private static $conn = null;
     
-    public static function getUsersConnection() {
-        if (self::$users_conn === null) {
+    public static function getConnection() {
+        if (self::$conn === null) {
             try {
-                self::$users_conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_USERS);
-                if (self::$users_conn->connect_error) {
-                    throw new Exception("Connection failed: " . self::$users_conn->connect_error);
+                self::$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+                if (self::$conn->connect_error) {
+                    throw new Exception("Connection failed: " . self::$conn->connect_error);
                 }
-                self::$users_conn->set_charset("utf8mb4");
+                self::$conn->set_charset("utf8mb4");
             } catch (Exception $e) {
                 error_log("Database connection error: " . $e->getMessage());
                 die("Database connection error. Please try again later.");
             }
         }
-        return self::$users_conn;
+        return self::$conn;
+    }
+    
+    // Backwards compatibility
+    public static function getUsersConnection() {
+        return self::getConnection();
     }
     
     public static function getTicketsConnection() {
-        if (self::$tickets_conn === null) {
-            try {
-                self::$tickets_conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_TICKETS);
-                if (self::$tickets_conn->connect_error) {
-                    throw new Exception("Connection failed: " . self::$tickets_conn->connect_error);
-                }
-                self::$tickets_conn->set_charset("utf8mb4");
-            } catch (Exception $e) {
-                error_log("Database connection error: " . $e->getMessage());
-                die("Database connection error. Please try again later.");
-            }
-        }
-        return self::$tickets_conn;
+        return self::getConnection();
     }
     
     public static function closeConnections() {
-        if (self::$users_conn !== null) {
-            self::$users_conn->close();
-            self::$users_conn = null;
-        }
-        if (self::$tickets_conn !== null) {
-            self::$tickets_conn->close();
-            self::$tickets_conn = null;
+        if (self::$conn !== null) {
+            self::$conn->close();
+            self::$conn = null;
         }
     }
 }

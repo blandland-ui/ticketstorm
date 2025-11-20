@@ -1,9 +1,7 @@
 -- TicketStorm Database Setup
--- Database: blacoksf_ticket_storm_users and blacoksf_ticket_storm_tickets
+-- Database: blacksitedb_database
 
--- Use the users database
--- CREATE DATABASE IF NOT EXISTS blacoksf_ticket_storm_users;
-USE blacoksf_ticket_storm_users;
+USE blacksitedb_database;
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
@@ -17,10 +15,6 @@ CREATE TABLE IF NOT EXISTS users (
     last_login TIMESTAMP NULL,
     is_active BOOLEAN DEFAULT TRUE
 );
-
--- Use the tickets database
--- CREATE DATABASE IF NOT EXISTS blacoksf_ticket_storm_tickets;
-USE blacoksf_ticket_storm_tickets;
 
 -- Tickets table
 CREATE TABLE IF NOT EXISTS tickets (
@@ -53,7 +47,6 @@ CREATE TABLE IF NOT EXISTS ticket_comments (
 
 -- Insert default admin user (password: admin123 - CHANGE THIS!)
 -- Password hash for 'admin123'
-USE blacoksf_ticket_storm_users;
 INSERT INTO users (username, email, password_hash, full_name, is_admin, is_active) 
 VALUES (
     'admin',

@@ -4,10 +4,12 @@ error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
+// Include config (session starts there)
 require_once '../config/database.php';
 
+// Set JSON header after session
 header('Content-Type: application/json');
-// Start session
+
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 switch ($action) {
