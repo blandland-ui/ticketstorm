@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - TicketStorm</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="index.html" class="nav-brand" style="text-decoration: none; list-style-type: none;">
+            <a href="/" class="nav-brand" style="text-decoration: none; list-style-type: none;">
                 <h1 style="margin: 0;">TicketStorm</h1>
             </a>
             <div class="nav-menu">
-                <a href="admin.html" class="active">All Tickets</a>
-                <a href="dashboard.html">User Dashboard</a>
+                <a href="/admin.html" class="active">All Tickets</a>
+                <a href="/dashboard.html">User Dashboard</a>
                 <span class="user-info" id="userInfo">Admin</span>
                 <button id="logoutBtn" class="btn btn-small">Logout</button>
             </div>
@@ -73,19 +73,19 @@
         // Check authentication - ADMIN ONLY
         async function checkAuth() {
             try {
-                const response = await fetch('api/auth.php?action=check');
+                const response = await fetch('/api/auth.php?action=check');
                 const data = await response.json();
                 
                 if (!data.success) {
                     alert('Please login to access admin panel');
-                    window.location.href = 'login.html';
+                    window.location.href = '/login.html';
                     return false;
                 }
                 
                 // Enforce admin-only access
                 if (!data.data.is_admin && data.data.is_admin !== 1 && data.data.is_admin !== '1') {
                     alert('Access denied. Admin privileges required.');
-                    window.location.href = 'dashboard.html';
+                    window.location.href = '/dashboard.html';
                     return false;
                 }
                 
@@ -93,7 +93,7 @@
                 return true;
             } catch (error) {
                 alert('Authentication error');
-                window.location.href = 'login.html';
+                window.location.href = '/login.html';
                 return false;
             }
         }
@@ -101,7 +101,7 @@
         // Load stats
         async function loadStats() {
             try {
-                const response = await fetch('api/tickets.php?action=list');
+                const response = await fetch('/api/tickets.php?action=list');
                 const data = await response.json();
                 
                 if (data.success) {
@@ -128,7 +128,7 @@
             container.innerHTML = '<div class="loading">Loading tickets...</div>';
             
             try {
-                const url = status ? `api/tickets.php?action=list&status=${status}` : 'api/tickets.php?action=list';
+                const url = status ? `/api/tickets.php?action=list&status=${status}` : '/api/tickets.php?action=list';
                 const response = await fetch(url);
                 const data = await response.json();
                 
@@ -169,7 +169,7 @@
             modal.classList.remove('hidden');
             
             try {
-                const response = await fetch(`api/tickets.php?action=get&ticket_id=${ticketId}`);
+                const response = await fetch(`/api/tickets.php?action=get&ticket_id=${ticketId}`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -341,10 +341,10 @@
             formData.append('action', 'logout');
             
             try {
-                await fetch('api/auth.php', { method: 'POST', body: formData });
-                window.location.href = 'login.html';
+                await fetch('/api/auth.php', { method: 'POST', body: formData });
+                window.location.href = '/login.html';
             } catch (error) {
-                window.location.href = 'login.html';
+                window.location.href = '/login.html';
             }
         });
         
