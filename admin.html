@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - TicketStorm</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">⚡ TicketStorm Admin</div>
+            <div class="nav-menu">
+                <a href="admin.html" class="active">All Tickets</a>
+                <span class="user-info" id="userInfo">Admin</span>
+                <button id="logoutBtn" class="btn btn-small">Logout</button>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container main-content">
+        <div class="page-header">
+            <h1>Admin Dashboard</h1>
+        </div>
+        
+        <!-- Stats Dashboard -->
+        <div id="statsContainer" class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Tickets</h3>
+                <p class="stat-number" id="totalTickets">-</p>
+            </div>
+            <div class="stat-card">
+                <h3>Open Tickets</h3>
+                <p class="stat-number" id="openTickets">-</p>
+            </div>
+            <div class="stat-card">
+                <h3>In Progress</h3>
+                <p class="stat-number" id="inProgressTickets">-</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total Users</h3>
+                <p class="stat-number" id="totalUsers">-</p>
+            </div>
+        </div>
+        
+        <div class="filter-bar">
+            <button class="filter-btn active" data-status="">All Tickets</button>
+            <button class="filter-btn" data-status="Open">Open</button>
+            <button class="filter-btn" data-status="In Progress">In Progress</button>
+            <button class="filter-btn" data-status="Resolved">Resolved</button>
+            <button class="filter-btn" data-status="Closed">Closed</button>
+        </div>
+        
+        <div id="ticketsContainer" class="tickets-container">
+            <div class="loading">Loading tickets...</div>
+        </div>
+    </div>
+    
+    <!-- Ticket Detail Modal -->
+    <div id="ticketModal" class="modal hidden">
+        <div class="modal-content large">
+            <span class="modal-close">&times;</span>
+            <div id="ticketDetail"></div>
+        </div>
+    </div>
+    
+    <script>
+        let currentFilter = '';
+        
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const response = await fetch('api/auth.php?action=check');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    window.location.href = 'login.html';
+                    return false;
+                }
+                
+                if (!data.data.is_admin) {
+                    window.location.href = 'dashboard.html';
+                    return false;
+                }
+                
+                document.getElementById('userInfo').textContent = `Admin: ${data.data.full_name}`;
+                return true;
+            } catch (error) {
+                window.location.href = 'login.html';
+                return false;
+            }
+        }
+        
+        // Load stats
+        async function loadStats() {
+            try {
+                const response = await fetch('api/tickets.php?action=stats');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.data;
+                    document.getElementById('totalTickets').textContent = stats.total_tickets || 0;
+                    document.getElementById('openTickets').textContent = stats.status_counts['Open'] || 0;
+                    document.getElementById('inProgressTickets').textContent = stats.status_counts['In Progress'] || 0;
+                    document.getElementById('totalUsers').textContent = stats.total_users || 0;
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+        
+        // Load tickets
+        async function loadTickets(status = '') {
+            const container = document.getElementById('ticketsContainer');
+            container.innerHTML = '<div class="loading">Loading tickets...</div>';
+            
+            try {
+                const url = status ? `api/tickets.php?action=list&status=${status}` : 'api/tickets.php?action=list';
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    container.innerHTML = data.data.map(ticket => `
+                        <div class="ticket-card admin-ticket" onclick="viewTicket(${ticket.ticket_id})">
+                            <div class="ticket-header">
+                                <h3>${escapeHtml(ticket.subject)}</h3>
+                                <span class="badge badge-${ticket.status.toLowerCase().replace(' ', '-')}">${ticket.status}</span>
+                            </div>
+                            <p class="ticket-description">${escapeHtml(ticket.description.substring(0, 150))}${ticket.description.length > 150 ? '...' : ''}</p>
+                            <div class="ticket-meta">
+                                <span class="priority priority-${ticket.priority.toLowerCase()}">Priority: ${ticket.priority}</span>
+                                <span>User: ${escapeHtml(ticket.full_name)} (@${escapeHtml(ticket.username)})</span>
+                                <span>Submitted: ${formatDate(ticket.submitted_at)}</span>
+                                <span>Category: ${ticket.category}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="empty-state">No tickets found.</div>';
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="error">Failed to load tickets. Please try again.</div>';
+            }
+        }
+        
+        // View ticket details
+        async function viewTicket(ticketId) {
+            const modal = document.getElementById('ticketModal');
+            const detail = document.getElementById('ticketDetail');
+            
+            detail.innerHTML = '<div class="loading">Loading...</div>';
+            modal.classList.remove('hidden');
+            
+            try {
+                const response = await fetch(`api/tickets.php?action=get&ticket_id=${ticketId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const ticket = data.data;
+                    detail.innerHTML = `
+                        <div class="ticket-detail">
+                            <div class="ticket-detail-header">
+                                <h2>${escapeHtml(ticket.subject)}</h2>
+                                <span class="badge badge-${ticket.status.toLowerCase().replace(' ', '-')}">${ticket.status}</span>
+                            </div>
+                            
+                            <div class="ticket-info-grid">
+                                <div><strong>User:</strong> ${escapeHtml(ticket.full_name)} (${escapeHtml(ticket.email)})</div>
+                                <div><strong>Priority:</strong> <span class="priority priority-${ticket.priority.toLowerCase()}">${ticket.priority}</span></div>
+                                <div><strong>Category:</strong> ${ticket.category}</div>
+                                <div><strong>Submitted:</strong> ${formatDate(ticket.submitted_at)}</div>
+                                <div><strong>Last Updated:</strong> ${formatDate(ticket.last_updated)}</div>
+                                ${ticket.resolved_at ? `<div><strong>Resolved:</strong> ${formatDate(ticket.resolved_at)}</div>` : ''}
+                            </div>
+                            
+                            <!-- Admin Controls -->
+                            <div class="admin-controls">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="updateStatus">Update Status</label>
+                                        <select id="updateStatus" class="form-control">
+                                            <option value="Open" ${ticket.status === 'Open' ? 'selected' : ''}>Open</option>
+                                            <option value="In Progress" ${ticket.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                            <option value="Resolved" ${ticket.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+                                            <option value="Closed" ${ticket.status === 'Closed' ? 'selected' : ''}>Closed</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="updatePriority">Update Priority</label>
+                                        <select id="updatePriority" class="form-control">
+                                            <option value="Low" ${ticket.priority === 'Low' ? 'selected' : ''}>Low</option>
+                                            <option value="Medium" ${ticket.priority === 'Medium' ? 'selected' : ''}>Medium</option>
+                                            <option value="High" ${ticket.priority === 'High' ? 'selected' : ''}>High</option>
+                                            <option value="Critical" ${ticket.priority === 'Critical' ? 'selected' : ''}>Critical</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <button onclick="updateTicket(${ticket.ticket_id})" class="btn btn-primary" style="margin-top: 25px;">Update Ticket</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="ticket-description-full">
+                                <h3>Description</h3>
+                                <p>${escapeHtml(ticket.description)}</p>
+                            </div>
+                            
+                            <div class="comments-section">
+                                <h3>Comments & Responses</h3>
+                                <div class="comments-list">
+                                    ${ticket.comments.length > 0 ? ticket.comments.map(comment => `
+                                        <div class="comment ${comment.is_admin_response ? 'admin-comment' : 'user-comment'}">
+                                            <div class="comment-header">
+                                                <strong>${escapeHtml(comment.full_name)}</strong>
+                                                ${comment.is_admin_response ? '<span class="admin-badge">Admin</span>' : ''}
+                                                <span class="comment-time">${formatDate(comment.created_at)}</span>
+                                            </div>
+                                            <p>${escapeHtml(comment.comment_text)}</p>
+                                        </div>
+                                    `).join('') : '<p class="no-comments">No comments yet.</p>'}
+                                </div>
+                                
+                                <form id="commentForm" class="comment-form">
+                                    <input type="hidden" name="ticket_id" value="${ticket.ticket_id}">
+                                    <textarea name="comment" placeholder="Add admin response..." required></textarea>
+                                    <button type="submit" class="btn btn-primary">Add Response</button>
+                                </form>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('commentForm').addEventListener('submit', handleCommentSubmit);
+                } else {
+                    detail.innerHTML = '<div class="error">Failed to load ticket details.</div>';
+                }
+            } catch (error) {
+                detail.innerHTML = '<div class="error">An error occurred.</div>';
+            }
+        }
+        
+        // Update ticket
+        async function updateTicket(ticketId) {
+            const status = document.getElementById('updateStatus').value;
+            const priority = document.getElementById('updatePriority').value;
+            
+            const formData = new FormData();
+            formData.append('action', 'update');
+            formData.append('ticket_id', ticketId);
+            formData.append('status', status);
+            formData.append('priority', priority);
+            
+            try {
+                const response = await fetch('api/tickets.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Ticket updated successfully!');
+                    await viewTicket(ticketId);
+                    await loadTickets(currentFilter);
+                    await loadStats();
+                } else {
+                    alert('Failed to update ticket: ' + data.message);
+                }
+            } catch (error) {
+                alert('An error occurred while updating the ticket.');
+            }
+        }
+        
+        // Handle comment submission
+        async function handleCommentSubmit(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            formData.append('action', 'comment');
+            
+            try {
+                const response = await fetch('api/tickets.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const ticketId = formData.get('ticket_id');
+                    await viewTicket(ticketId);
+                } else {
+                    alert('Failed to add comment: ' + data.message);
+                }
+            } catch (error) {
+                alert('An error occurred while adding the comment.');
+            }
+        }
+        
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.dataset.status;
+                loadTickets(currentFilter);
+            });
+        });
+        
+        // Modal close
+        document.querySelector('.modal-close').addEventListener('click', function() {
+            document.getElementById('ticketModal').classList.add('hidden');
+        });
+        
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('ticketModal');
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+        
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            const formData = new FormData();
+            formData.append('action', 'logout');
+            
+            try {
+                await fetch('api/auth.php', { method: 'POST', body: formData });
+                window.location.href = 'login.html';
+            } catch (error) {
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
+        
+        // Initialize
+        checkAuth().then(authenticated => {
+            if (authenticated) {
+                loadStats();
+                loadTickets();
+            }
+        });
+    </script>
+</body>
+</html>

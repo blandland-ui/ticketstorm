@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Ticket - TicketStorm</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">⚡ TicketStorm</div>
+            <div class="nav-menu">
+                <a href="dashboard.html">My Tickets</a>
+                <a href="new-ticket.html" class="active">New Ticket</a>
+                <span class="user-info" id="userInfo">Welcome</span>
+                <button id="logoutBtn" class="btn btn-small">Logout</button>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container main-content">
+        <div class="page-header">
+            <h1>Create New Support Ticket</h1>
+        </div>
+        
+        <div class="form-container">
+            <form id="newTicketForm" class="ticket-form">
+                <div id="messageBox" class="message-box hidden"></div>
+                
+                <div class="form-group">
+                    <label for="subject">Subject *</label>
+                    <input type="text" id="subject" name="subject" required maxlength="200" placeholder="Brief description of your issue">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="priority">Priority *</label>
+                        <select id="priority" name="priority" required>
+                            <option value="Low">Low</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <select id="category" name="category" required>
+                            <option value="General">General</option>
+                            <option value="Hardware">Hardware</option>
+                            <option value="Software">Software</option>
+                            <option value="Network">Network</option>
+                            <option value="Account">Account</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description *</label>
+                    <textarea id="description" name="description" required rows="10" placeholder="Please provide detailed information about your issue..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Submit Ticket</button>
+                    <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const response = await fetch('api/auth.php?action=check');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    window.location.href = 'login.html';
+                    return false;
+                }
+                
+                document.getElementById('userInfo').textContent = `Welcome, ${data.data.full_name}`;
+                
+                if (data.data.is_admin) {
+                    window.location.href = 'admin.html';
+                    return false;
+                }
+                
+                return true;
+            } catch (error) {
+                window.location.href = 'login.html';
+                return false;
+            }
+        }
+        
+        document.getElementById('newTicketForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const messageBox = document.getElementById('messageBox');
+            const formData = new FormData(this);
+            formData.append('action', 'create');
+            
+            try {
+                const response = await fetch('api/tickets.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageBox.className = 'message-box success';
+                    messageBox.textContent = 'Ticket created successfully! Redirecting...';
+                    messageBox.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                } else {
+                    messageBox.className = 'message-box error';
+                    messageBox.textContent = data.message;
+                    messageBox.classList.remove('hidden');
+                }
+            } catch (error) {
+                messageBox.className = 'message-box error';
+                messageBox.textContent = 'An error occurred. Please try again.';
+                messageBox.classList.remove('hidden');
+            }
+        });
+        
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            const formData = new FormData();
+            formData.append('action', 'logout');
+            
+            try {
+                await fetch('api/auth.php', { method: 'POST', body: formData });
+                window.location.href = 'login.html';
+            } catch (error) {
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // Initialize
+        checkAuth();
+    </script>
+</body>
+</html>

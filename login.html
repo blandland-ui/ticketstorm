@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - TicketStorm</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="logo">
+                <h1>⚡ TicketStorm</h1>
+                <p>Tech Support Ticket System</p>
+            </div>
+            
+            <form id="loginForm" class="auth-form">
+                <h2>Login</h2>
+                
+                <div id="messageBox" class="message-box hidden"></div>
+                
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Login</button>
+                
+                <div class="auth-links">
+                    <p>Don't have an account? <a href="register.html">Register here</a></p>
+                    <p><a href="index.html">← Back to Home</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const messageBox = document.getElementById('messageBox');
+            const formData = new FormData(this);
+            formData.append('action', 'login');
+            
+            try {
+                const response = await fetch('api/auth.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageBox.className = 'message-box success';
+                    messageBox.textContent = data.message;
+                    messageBox.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        window.location.href = data.data.is_admin ? 'admin.html' : 'dashboard.html';
+                    }, 1000);
+                } else {
+                    messageBox.className = 'message-box error';
+                    messageBox.textContent = data.message;
+                    messageBox.classList.remove('hidden');
+                }
+            } catch (error) {
+                messageBox.className = 'message-box error';
+                messageBox.textContent = 'An error occurred. Please try again.';
+                messageBox.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

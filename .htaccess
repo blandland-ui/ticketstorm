@@ -1,0 +1,53 @@
+# Deny access to .htaccess and .htpasswd files
+<Files ~ "^\.ht">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Prevent directory listing
+Options -Indexes
+
+# Protect configuration files
+<FilesMatch "^(database\.php|config\.php)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protect SQL files from being accessed
+<Files ~ "\.sql$">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Protect sensitive directories
+<DirectoryMatch "^/.*(config|database)/">
+    Order allow,deny
+    Deny from all
+</DirectoryMatch>
+
+# Enable error documents (optional)
+ErrorDocument 404 /index.html
+ErrorDocument 403 /index.html
+
+# PHP security settings
+<IfModule mod_php7.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value error_log /home/blacoksf/php_errors.log
+</IfModule>
+
+# Force HTTPS (uncomment when SSL is installed)
+# <IfModule mod_rewrite.c>
+#     RewriteEngine On
+#     RewriteCond %{HTTPS} off
+#     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>
+
+# Set default index file
+DirectoryIndex index.html index.php
+
+# Prevent access to git files
+<DirectoryMatch "^/.*/\.git/">
+    Order allow,deny
+    Deny from all
+</DirectoryMatch>
