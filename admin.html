@@ -26,23 +26,23 @@
             <h1>Admin Dashboard</h1>
         </div>
         
-        <!-- Stats Dashboard -->
-        <div id="statsContainer" class="stats-grid">
-            <div class="stat-card">
-                <h3>Total Tickets</h3>
-                <p class="stat-number" id="totalTickets">-</p>
+        <!-- Priority Stats Dashboard -->
+        <div class="priority-stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+            <div class="priority-stat-card" style="background: #fff; border: 2px solid #e74c3c; border-radius: 8px; padding: 2rem; text-align: center; box-shadow: 0 2px 8px rgba(231, 76, 60, 0.15);">
+                <p style="margin: 0 0 0.5rem 0; color: #7f8c8d; font-size: 0.875rem; font-weight: 600; text-transform: uppercase;">Critical</p>
+                <h2 id="criticalTickets" style="margin: 0; font-size: 3rem; color: #e74c3c; font-weight: bold;">0</h2>
             </div>
-            <div class="stat-card">
-                <h3>Open Tickets</h3>
-                <p class="stat-number" id="openTickets">-</p>
+            <div class="priority-stat-card" style="background: #fff; border: 2px solid #e67e22; border-radius: 8px; padding: 2rem; text-align: center; box-shadow: 0 2px 8px rgba(230, 126, 34, 0.15);">
+                <p style="margin: 0 0 0.5rem 0; color: #7f8c8d; font-size: 0.875rem; font-weight: 600; text-transform: uppercase;">High</p>
+                <h2 id="highTickets" style="margin: 0; font-size: 3rem; color: #e67e22; font-weight: bold;">0</h2>
             </div>
-            <div class="stat-card">
-                <h3>In Progress</h3>
-                <p class="stat-number" id="inProgressTickets">-</p>
+            <div class="priority-stat-card" style="background: #fff; border: 2px solid #f39c12; border-radius: 8px; padding: 2rem; text-align: center; box-shadow: 0 2px 8px rgba(243, 156, 18, 0.15);">
+                <p style="margin: 0 0 0.5rem 0; color: #7f8c8d; font-size: 0.875rem; font-weight: 600; text-transform: uppercase;">Medium</p>
+                <h2 id="mediumTickets" style="margin: 0; font-size: 3rem; color: #f39c12; font-weight: bold;">0</h2>
             </div>
-            <div class="stat-card">
-                <h3>Total Users</h3>
-                <p class="stat-number" id="totalUsers">-</p>
+            <div class="priority-stat-card" style="background: #fff; border: 2px solid #27ae60; border-radius: 8px; padding: 2rem; text-align: center; box-shadow: 0 2px 8px rgba(39, 174, 96, 0.15);">
+                <p style="margin: 0 0 0.5rem 0; color: #7f8c8d; font-size: 0.875rem; font-weight: 600; text-transform: uppercase;">Low</p>
+                <h2 id="lowTickets" style="margin: 0; font-size: 3rem; color: #27ae60; font-weight: bold;">0</h2>
             </div>
         </div>
         
@@ -97,15 +97,21 @@
         // Load stats
         async function loadStats() {
             try {
-                const response = await fetch('api/tickets.php?action=stats');
+                const response = await fetch('api/tickets.php?action=list');
                 const data = await response.json();
                 
                 if (data.success) {
-                    const stats = data.data;
-                    document.getElementById('totalTickets').textContent = stats.total_tickets || 0;
-                    document.getElementById('openTickets').textContent = stats.status_counts['Open'] || 0;
-                    document.getElementById('inProgressTickets').textContent = stats.status_counts['In Progress'] || 0;
-                    document.getElementById('totalUsers').textContent = stats.total_users || 0;
+                    const tickets = data.data;
+                    // Count by priority
+                    const critical = tickets.filter(t => t.priority === 'Critical').length;
+                    const high = tickets.filter(t => t.priority === 'High').length;
+                    const medium = tickets.filter(t => t.priority === 'Medium').length;
+                    const low = tickets.filter(t => t.priority === 'Low').length;
+                    
+                    document.getElementById('criticalTickets').textContent = critical;
+                    document.getElementById('highTickets').textContent = high;
+                    document.getElementById('mediumTickets').textContent = medium;
+                    document.getElementById('lowTickets').textContent = low;
                 }
             } catch (error) {
                 console.error('Failed to load stats:', error);
@@ -123,7 +129,11 @@
                 const data = await response.json();
                 
                 if (data.success && data.data.length > 0) {
-                    container.innerHTML = data.data.map(ticket => `
+                    // Sort by priority: Critical > High > Medium > Low
+                    const priorityOrder = { 'Critical': 0, 'High': 1, 'Medium': 2, 'Low': 3 };
+                    const sortedTickets = data.data.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+                    
+                    container.innerHTML = sortedTickets.map(ticket => `
                         <div class="ticket-card admin-ticket" onclick="viewTicket(${ticket.ticket_id})">
                             <div class="ticket-header">
                                 <h3>${escapeHtml(ticket.subject)}</h3>
