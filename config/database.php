@@ -1,7 +1,7 @@
 <?php
 // Database Configuration
 define('DB_HOST', 'localhost');
-define('DB_USER', 'cpses_blwvbujfkq');
+define('DB_USER', 'blacoksf_admin');
 define('DB_PASS', 'The  hater#');
 define('DB_NAME', 'blacoksf_blacksitedb_database');
 
