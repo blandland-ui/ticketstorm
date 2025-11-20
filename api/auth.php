@@ -7,7 +7,7 @@ ini_set('log_errors', 1);
 require_once '../config/database.php';
 
 header('Content-Type: application/json');
-
+// Start session
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 switch ($action) {
